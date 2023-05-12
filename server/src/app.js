@@ -2,26 +2,45 @@ const express = require('express')
 const cors = require('cors')
 const dotenv =  require("dotenv")
 const path = require('path')
+var session = require('express-session');
 // const Middlewares = ('./api/middlewares')
 const i18n = require('i18n-express')
 const ApiError = require("./errors/api-error")
+const cookieParser  = require('cookie-parser')
+const bodyParser  = require('body-parser')
+
 dotenv.config()
+//use sessions for tracking logins
+
+
 const app = express()
 
 
+app.set('view engine', 'pug');
+app.set('views','./views');
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended:true
+}));
+app.use(session({
+  secret: 'aloalo1234'//,
+  // resave: true,
+  // saveUninitialized: false,
+  // store: new MongoStore({
+  //   mongooseConnection: db
+  // })
+}));
 app.use( i18n({
   translationsPath: path.join(__dirname, 'locales'), // <--- use here. Specify translations files path.
   siteLangs: ["en","vi"],
   textsVarName: 'translation'
 }))
 
-
 app.use(cors())
 app.use(express.json())
 
- 
-
-const userRoutes = require('./routes/user')
+const userRoutes = require('./routes/userRoutes')
 const adminRoutes = require('./routes/admin')
 
 app.use('/', userRoutes)
@@ -43,7 +62,5 @@ app.use((err, req, res, next) => {
   message: err.message || "Internal Server Error",
   });
 });
-
-
 
  module.exports = app
