@@ -1,20 +1,24 @@
 const express = require('express')
+const config = require('./config')
+const mongoose = require('mongoose');
 const cors = require('cors')
 const dotenv =  require("dotenv")
 const path = require('path')
-var session = require('express-session');
-// const Middlewares = ('./api/middlewares')
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const i18n = require('i18n-express')
 const ApiError = require("./errors/api-error")
 const cookieParser  = require('cookie-parser')
 const bodyParser  = require('body-parser')
 
+mongoose.connect(config.db.uri, { useNewUrlParser: true })
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.log(err))
+
 dotenv.config()
 //use sessions for tracking logins
 
-
 const app = express()
-
 
 app.set('view engine', 'pug');
 app.set('views','./views');
@@ -23,13 +27,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended:true
 }));
+
 app.use(session({
-  secret: 'aloalo1234'//,
-  // resave: true,
-  // saveUninitialized: false,
-  // store: new MongoStore({
-  //   mongooseConnection: db
-  // })
+  secret: 'aloalo1234',
+  resave: true,
+  saveUninitialized: false, // don't create session until something stored
+  store: new MongoStore({
+    mongoUrl: config.db.uri,
+    ttl: 2 * 24 * 60 * 60, // Session expiration = 2 days.
+    autoRemove: 'native', // Set MongoDB to clean expired sessions (default mode)
+    collectionName:"sessions",
+    touchAfter: 10 * 60 // time period in seconds = 10 minutes
+  })
 }));
 app.use( i18n({
   translationsPath: path.join(__dirname, 'locales'), // <--- use here. Specify translations files path.
@@ -37,14 +46,27 @@ app.use( i18n({
   textsVarName: 'translation'
 }))
 
+function isAuthenticated (req, res, next) {
+  if (req.session.user) {
+    console.log("req.session.user:"+req.session.user);
+    next()
+  }
+  else {
+    console.log("req.session.user:NULL");
+    next('route')
+  }
+}
+
 app.use(cors())
 app.use(express.json())
+
+
 
 const userRoutes = require('./routes/userRoutes')
 const adminRoutes = require('./routes/admin')
 
 app.use('/', userRoutes)
-app.use('/admin', adminRoutes)
+app.use('/admin',isAuthenticated, adminRoutes)
 
 // handle 404 response
 app.use((req, res, next) => {

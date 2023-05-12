@@ -1,0 +1,17 @@
+html
+   head
+      title Home page
+   body
+      if(message)
+         h4 #{message}
+
+      if(name)
+         div Hey #{name}, How are you doing today?
+         div Want to log out?
+         form(action="/logout", method="post") 
+            button(type="submit") Logout
+      else 
+         div Home page for Guest
+         a(href="/login") Login
+         div
+         a(href="/register") Signup
