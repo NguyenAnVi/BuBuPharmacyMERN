@@ -1,0 +1,9 @@
+main{
+  /* set footer always stick to bottom */
+  min-height: calc(100vh - 64px - 375px - 50px) !important; 
+  margin: 24px;
+  padding: 12px;
+}
+footer{
+  background-color: aquamarine;
+}

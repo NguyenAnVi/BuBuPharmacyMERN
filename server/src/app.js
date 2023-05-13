@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(session({
-  secret: 'aloalo1234',
+  secret: config.session.secret,
   resave: true,
   saveUninitialized: false, // don't create session until something stored
   store: new MongoStore({
